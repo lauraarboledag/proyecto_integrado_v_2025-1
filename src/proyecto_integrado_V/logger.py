@@ -7,25 +7,31 @@ class Logger:
         if not os.path.exists('logs'):
             os.makedirs('logs')
 
-        self.log_file = f"logs/btc_eur_analysis_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+        log_file = f"logs/bitcoin_eur_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
 
         logging.basicConfig(
-            filename=self.log_file,
+            filename=log_file,
             level=logging.INFO,
-            format='[%(asctime)s | %(levelname)s] %(message)s',
+            format='[%(asctime)s | %(levelname)s] [%(name)s.%(class_name)s.%(function_name)s] %(message)s',
             datefmt='%Y-%m-%d %H:%M:%S'
         )
 
-        self.logger = logging.getLogger('BTC_EUR_Analysis')
+        self.logger = logging.getLogger('BitcoinEUR')
 
     def info(self, class_name, function_name, description):
-        """Registra un mensaje de nivel INFO."""
-        self.logger.info(f"[{class_name}.{function_name}] {description}")
+        self.logger.info(
+            description,
+            extra={'class_name': class_name, 'function_name': function_name}
+        )
 
     def warning(self, class_name, function_name, description):
-        """Registra un mensaje de nivel WARNING."""
-        self.logger.warning(f"[{class_name}.{function_name}] {description}")
+        self.logger.warning(
+            description,
+            extra={'class_name': class_name, 'function_name': function_name}
+        )
 
     def error(self, class_name, function_name, description):
-        """Registra un mensaje de nivel ERROR."""
-        self.logger.error(f"[{class_name}.{function_name}] {description}")
+        self.logger.error(
+            description,
+            extra={'class_name': class_name, 'function_name': function_name}
+        )
