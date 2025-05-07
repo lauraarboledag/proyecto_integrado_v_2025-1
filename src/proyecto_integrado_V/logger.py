@@ -4,4 +4,28 @@ import os
 
 class Logger:
     def __init__(self):
-        pass
+        if not os.path.exists('logs'):
+            os.makedirs('logs')
+
+        self.log_file = f"logs/btc_eur_analysis_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+
+        logging.basicConfig(
+            filename=self.log_file,
+            level=logging.INFO,
+            format='[%(asctime)s | %(levelname)s] %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S'
+        )
+
+        self.logger = logging.getLogger('BTC_EUR_Analysis')
+
+    def info(self, class_name, function_name, description):
+        """Registra un mensaje de nivel INFO."""
+        self.logger.info(f"[{class_name}.{function_name}] {description}")
+
+    def warning(self, class_name, function_name, description):
+        """Registra un mensaje de nivel WARNING."""
+        self.logger.warning(f"[{class_name}.{function_name}] {description}")
+
+    def error(self, class_name, function_name, description):
+        """Registra un mensaje de nivel ERROR."""
+        self.logger.error(f"[{class_name}.{function_name}] {description}")

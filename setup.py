@@ -8,10 +8,9 @@ setup(
     description= "", 
     py_modules= ["proyecto"],
     install_requires = [
-        "pandas",
+        "pandas==2.2.3",
         "openpyxl",
-        "requests",
-        "kagglehub",
-        "yfinance"
+        "requests==2.32.3",
+        "beautifulsoup4==4.13.3"
     ]
 )
