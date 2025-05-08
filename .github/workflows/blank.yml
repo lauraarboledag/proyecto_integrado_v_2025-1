@@ -1,4 +1,4 @@
-name: proyecto_integrado_V
+name: Entregables
 
 on:
   push:
@@ -10,31 +10,30 @@ jobs:
     permissions:
       contents: write
 
+
     steps:
-      - name: Checkout repo
+      - name: Paso 1 Checkout repo
         uses: actions/checkout@v4
 
-      - name: Setup Python
+      - name: Paso 2 Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.9.2'
-      
-      - name: paso1 - Crea entorno virtual
+      - name: Paso 3 - crea entorno virtual
         run: python -m venv venv
-
-      - name: paso2 - Activar entorno virtual
-        run: ./venv/Scripts/activate
-
-      - name: paso3 - Actualizar pip
+      - name: Paso 4 - activar entorno virtual
+        run: ./venv/Scripts/activate   
+      - name: Paso 5 - actualizar pip
         run: pip install --upgrade pip
-
-      - name: paso4 - Instalar dependencias
+      - name: Paso 6 - instalar dependencias
         run: pip install -e .
+      - name: Paso 7 - Ejecutar Script de main
+        run: python src/proyecto_integrado_V/main.py
 
       - name: Commit and Push changes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "Generación de informe de transformaciones"
-          commit_user_name: "Lauraarboledag [GitHub Actions]"
-          commit_user_email: "laura.arboledag@est.iudigital.edu.co"
-          commit_author: "Laura Arboleda <laura.arboledag@est.iudigital.edu.co>"
+          commit_message: proyecto integrado
+          commit_user_name: Laura Arboleda Gallego [GitHub Actions]
+          commit_user_email: laura.arboledag@est.iudigital.edu.co
+          commit_author: aura.arboledag@est.iudigital.edu.co <laura.arboledag@est.iudigital.edu.co>
