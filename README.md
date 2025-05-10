@@ -1,1 +1,5 @@
-# proyecto_integrado_v_2025-1
+Laura Arboleda Gallego, Giordan Jese Ricardo Parra
+
+**PROYECTO INTEGRADO V**
+
+EVIDENCIA DE APRENDIZAJE 1: RECOPILACIÓN DE DATOS HISTÓRICOS BTC-EUR
