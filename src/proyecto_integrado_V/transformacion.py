@@ -1,46 +1,76 @@
+# src/proyecto_integrado_V/transformacion.py
+
 import pandas as pd
 import numpy as np
 from logger import Logger
 
-class DataTransformer:
+class DataEnricher:
     def __init__(self, logger: Logger):
         self.logger = logger
 
-    def transformar(self, df: pd.DataFrame) -> pd.DataFrame:
+    def enriquecer(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Realiza la limpieza, transformaciones internas y enriquece con indicador macroeconómico.
+        Pasos:
+        0) Limpieza de datos (duplicados, nulos, precios no válidos, reset índice)
+        1) Transformaciones internas (retorno logarítmico, medias móviles, volatilidad)
+        2) Enriquecimiento macro (tasa de interés del BCE)
+        """
         try:
-            self.logger.info('Transformer', 'transformar', 'Iniciando transformación de datos')
+            # 0) LIMPIEZA ------------------------------------------------
+            self.logger.info('DataEnricher', 'enriquecer', 'Iniciando limpieza de datos')
 
-            # Asegurar que las columnas necesarias están presentes
-            required_cols = ['fecha', 'cerrar']
-            if not all(col in df.columns for col in required_cols):
-                self.logger.error('Transformer', 'transformar', 'Faltan columnas necesarias en el DataFrame')
-                return df
+            # Eliminar duplicados por fecha
+            df = df.drop_duplicates(subset=['fecha'])
 
-            # Convertir la columna 'fecha' a datetime y ordenar
+            # Convertir fecha y descartar nulos
             df['fecha'] = pd.to_datetime(df['fecha'], dayfirst=True, errors='coerce')
             df = df.dropna(subset=['fecha', 'cerrar'])
-            df = df.sort_values(by='fecha')
 
-            # Asegurar que 'cerrar' es numérica
-            df['cerrar'] = pd.to_numeric(df['cerrar'].str.replace('.', '', regex=False)
-                                                     .str.replace(',', '.', regex=False), errors='coerce')
-
+            # Normalizar 'cerrar' a float
+            df['cerrar'] = (
+                df['cerrar']
+                .astype(str)
+                .str.replace('.', '', regex=False)
+                .str.replace(',', '.', regex=False)
+                .pipe(pd.to_numeric, errors='coerce')
+            )
             df = df.dropna(subset=['cerrar'])
 
-            # Calcular retorno logarítmico diario
+            # Filtrar precios no válidos
+            df = df[df['cerrar'] > 0]
+
+            # Ordenar cronológicamente y resetear índice
+            df = df.sort_values('fecha').reset_index(drop=True)
+            self.logger.info('DataEnricher', 'enriquecer', 'Limpieza completada')
+
+            # 1) TRANSFORMACIONES INTERNAS -------------------------------
+            self.logger.info('DataEnricher', 'enriquecer', 'Iniciando transformaciones internas')
             df['retorno_log'] = np.log(df['cerrar'] / df['cerrar'].shift(1))
+            df['ma_7']        = df['cerrar'].rolling(window=7).mean()
+            df['ma_30']       = df['cerrar'].rolling(window=30).mean()
+            df['vol_7']       = df['retorno_log'].rolling(window=7).std()
+            df['vol_30']      = df['retorno_log'].rolling(window=30).std()
+            self.logger.info('DataEnricher', 'enriquecer', 'Transformaciones internas finalizadas')
 
-            # Calcular medias móviles
-            df['media_movil_7'] = df['cerrar'].rolling(window=7).mean()
-            df['media_movil_30'] = df['cerrar'].rolling(window=30).mean()
+            # 2) ENRIQUECIMIENTO MACRO (TASA BCE) --------------------------
+            self.logger.info('DataEnricher', 'enriquecer', 'Añadiendo indicador macro: tasa BCE')
+            url_bce = (
+                'https://sdw.ecb.europa.eu/quickviewexport.do'
+                '?SERIES_KEY=120.EXR.D.EUR.N.X&csv.x=yes'
+            )
+            df_bce = (
+                pd.read_csv(url_bce, skiprows=5, names=['fecha', 'tasa_bce'], parse_dates=['fecha'])
+                  .dropna(subset=['tasa_bce'])
+                  .sort_values('fecha')
+            )
 
-            # Calcular volatilidad (desviación estándar)
-            df['volatilidad_7'] = df['retorno_log'].rolling(window=7).std()
-            df['volatilidad_30'] = df['retorno_log'].rolling(window=30).std()
+            # Unir datasets
+            df = pd.merge(df, df_bce, on='fecha', how='left')
+            self.logger.info('DataEnricher', 'enriquecer', 'Enriquecido con tasa BCE')
 
-            self.logger.info('Transformer', 'transformar', 'Transformación completada con éxito')
             return df
 
         except Exception as e:
-            self.logger.error('Transformer', 'transformar', f'Error durante la transformación: {e}')
+            self.logger.error('DataEnricher', 'enriquecer', f'Error durante el enriquecimiento: {e}')
             return df
