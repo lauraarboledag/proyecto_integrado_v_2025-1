@@ -1,6 +1,7 @@
 from logger import Logger
 from collector import Collector
 from transformacion import DataEnricher
+from modeller import Modeler
 import pandas as pd
 import os
 import sqlite3
@@ -47,9 +48,19 @@ def main():
         logger.info('Main', 'main', f'Datos guardados en SQLite: {db_path} (tabla: {table_name})')
     except Exception as e:
         logger.error('Main', 'main', f'Error al guardar en SQLite: {e}')
-
-    # 8) Mostrar resultado breve
+    
+    # 10) Mostrar resultado breve
     print(df.head())
+    
+    # 8) Entrenar el modelo
+        
+    modeler = Modeler(logger)
+    metrics = modeler.entrenar(df)
+    print(f"RMSE: {metrics['rmse']:.4f}, MAE: {metrics['mae']:.4f}")
+    
+    # 9) Predicción de ejemplo (reutiliza el mismo df u otro nuevo)
+    preds = modeler.predecir(df)
+    print("Primeras 5 predicciones:", preds[:5])
 
 if __name__ == "__main__":
     main()
