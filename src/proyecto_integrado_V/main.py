@@ -15,6 +15,7 @@ def main():
     collector = Collector(logger)
     logger.info('Main', 'main', 'Inicializar clase Collector')
     df = collector.collector_data()
+    print(f"[Debug] DataFrame recolectado con shape: {df.shape}")
 
     # 3) Verificar que hay datos
     if df.empty:
@@ -22,23 +23,22 @@ def main():
         return
 
     # 4) Enriquecer datos (internos + macro)
-    enricher = DataEnricher(logger)
-    df = enricher.enriquecer(df)
+    enricher = DataEnricher(logger)        # <-- Usamos DataEnricher
+    df = enricher.enriquecer(df)           # <-- Llamamos a enriquecer()
+    print(f"[Debug] DataFrame enriquecido con shape: {df.shape}")
 
-    # 5) Definir rutas de salida
+    # 5) Guardar CSV
     base_path  = os.path.dirname(os.path.abspath(__file__))
     output_dir = os.path.join(base_path, 'static', 'data')
     os.makedirs(output_dir, exist_ok=True)
-
-    # 6) Guardar CSV
-    csv_path = os.path.join(output_dir, 'BTC_EUR_data.csv')
+    csv_path   = os.path.join(output_dir, 'BTC_EUR_data.csv')
     try:
         df.to_csv(csv_path, index=False)
         logger.info('Main', 'main', f'Datos guardados en CSV: {csv_path}')
     except Exception as e:
         logger.error('Main', 'main', f'Error al guardar CSV: {e}')
 
-    # 7) Guardar en SQLite
+    # 6) Guardar en SQLite
     db_path    = os.path.join(output_dir, 'btc_eur_data.db')
     table_name = 'btc_eur_history'
     try:
@@ -48,19 +48,25 @@ def main():
         logger.info('Main', 'main', f'Datos guardados en SQLite: {db_path} (tabla: {table_name})')
     except Exception as e:
         logger.error('Main', 'main', f'Error al guardar en SQLite: {e}')
-    
-    # 10) Mostrar resultado breve
+
+    # 7) Mostrar un resumen
     print(df.head())
-    
-    # 8) Entrenar el modelo
-        
+
+    # 8) Entrenamiento del modelo
     modeler = Modeler(logger)
     metrics = modeler.entrenar(df)
-    print(f"RMSE: {metrics['rmse']:.4f}, MAE: {metrics['mae']:.4f}")
-    
-    # 9) Predicción de ejemplo (reutiliza el mismo df u otro nuevo)
+    if metrics is not None and 'rmse' in metrics and 'mae' in metrics:
+        print(f"RMSE: {metrics['rmse']:.4f}, MAE: {metrics['mae']:.4f}")
+    else:
+        logger.error('Main', 'main', 'Entrenamiento fallido: no se obtuvieron métricas')
+        return
+
+    # 9) Predicción de ejemplo
     preds = modeler.predecir(df)
-    print("Primeras 5 predicciones:", preds[:5])
+    if preds.size > 0:
+        print("Primeras 5 predicciones:", preds[:5])
+    else:
+        logger.error('Main', 'main', 'Predicción fallida: modelo no devolvió resultados')
 
 if __name__ == "__main__":
     main()
