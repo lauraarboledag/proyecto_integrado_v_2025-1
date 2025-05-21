@@ -11,6 +11,7 @@ setup(
         "pandas==2.2.3",
         "openpyxl",
         "requests==2.32.3",
-        "beautifulsoup4==4.13.3"
+        "beautifulsoup4==4.13.3",
+        "joblib"
     ]
 )
