@@ -71,7 +71,7 @@ class Modeler:
 
             features = [
                 'retorno_log_diario', 'media_movil_7d', 'media_movil_30d',
-                'volatilidad_7d', 'volatilidad_30d', 'tasa_interes_bce'
+                'volatilidad_7d', 'volatilidad_30d'
             ]
             X_new = df[features]
             preds = self.model.predict(X_new)
